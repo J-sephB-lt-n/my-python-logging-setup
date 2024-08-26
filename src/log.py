@@ -8,7 +8,9 @@ from typing import Any, Callable, Final, Optional, Self
 
 from src.custom_exceptions import AlreadyExistsError
 
-BASE_LOGGER_FORMAT: Final[str] = "%(asctime)s : %(name)s : %(levelname)s : %(message)s"
+BASE_LOGGER_FORMAT: Final[str] = (
+    "%(asctime)s : %(name)s : %(levelname)s : [daily ELT] %(message)s"
+)
 
 
 def create_default_logger(logger_name: str) -> logging.Logger:
@@ -110,10 +112,11 @@ class CodeSectionTimer:
     """Logs runtime between 2 checkpoints (i.e. times a code section)
 
     Example:
+        >>> import logging
         >>> logger: logging.Logger = create_default_logger(__name__)
         >>> code_section_timer = CodeSectionTimer()
-        >>> code_section_timer.section("load data").start()
-        >>> code_section_timer.section("load_data").end()
+        >>> code_section_timer.section("load data").start(logging.INFO)
+        >>> code_section_timer.section("load_data").end(logging.INFO)
     """
 
     def __init__(self) -> None:
@@ -131,16 +134,16 @@ class CodeSectionTimer:
         self.current_section = section_name
         return self
 
-    def start(self) -> None:
+    def start(self, loglevel: int = logging.INFO) -> None:
         """Starts the timer for the currently selected section"""
         if self.sections[self.current_section]["start_time"] is not None:
             raise AlreadyExistsError(
                 f"section '{self.current_section}' has already started"
             )
         self.sections[self.current_section]["start_time"] = time.perf_counter()
-        self.logger.info("Started section '%s'", self.current_section)
+        self.logger.log(loglevel, "Started section '%s'", self.current_section)
 
-    def end(self) -> None:
+    def end(self, loglevel: int = logging.INFO) -> None:
         """Stops the running timer of the currently selected section"""
         if self.sections[self.current_section]["end_time"] is not None:
             raise AlreadyExistsError(
@@ -151,7 +154,8 @@ class CodeSectionTimer:
             self.sections[self.current_section]["end_time"]
             - self.sections[self.current_section]["start_time"]
         )
-        self.logger.info(
+        self.logger.log(
+            loglevel,
             "Finished section '%s' (total runtime %s seconds = %s minutes)",
             self.current_section,
             f"{seconds_elapsed:,.0f}",

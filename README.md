@@ -1,4 +1,6 @@
-# my-python-logging-setup
+# My Python Logging Setup
+
+A toy codebase illustrating native python logging functionality.
 
 Goals:
 
