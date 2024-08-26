@@ -11,7 +11,7 @@ from src.custom_exceptions import AlreadyExistsError
 BASE_LOGGER_FORMAT: Final[str] = "%(asctime)s : %(name)s : %(levelname)s : %(message)s"
 
 
-def create_default_stream_logger(logger_name: str) -> logging.Logger:
+def create_default_logger(logger_name: str) -> logging.Logger:
     """Creates a new logger with default settings"""
     logger = logging.getLogger(logger_name)
     if logger.handlers:
@@ -75,8 +75,8 @@ def log_function_or_method_call(
     logger: logging.Logger,
     log_inputs: bool = False,
     log_outputs: bool = False,
-    log_inputs_max_len: int = 50,
-    log_outputs_max_len: int = 50,
+    log_inputs_max_nchar: int = 50,
+    log_outputs_max_nchar: int = 50,
 ):
     """A function decorator which generates a log message when the function is run"""
 
@@ -84,10 +84,22 @@ def log_function_or_method_call(
         @functools.wraps(func)
         def wrapper_log_function_call(*args, **kwargs):
             log_message: str = f"Called {func.__name__}("
-            # other stuff here #
+            if log_inputs:
+                log_message += ", ".join(
+                    [dynamic_str_truncate(arg, log_inputs_max_nchar) for arg in args]
+                )
+                log_message += ", ".join(
+                    [
+                        f"{dynamic_str_truncate(key, log_inputs_max_nchar)}={dynamic_str_truncate(value, log_inputs_max_nchar)}"
+                        for key, value in kwargs.items()
+                    ]
+                )
             log_message += ")"
             logger.info(log_message)
-            return func(*args, **kwargs)
+            func_output = func(*args, **kwargs)
+            if log_outputs:
+                log_message += f"\nFunction/method output:\n{dynamic_str_truncate(func_output, log_outputs_max_nchar)}"
+            return func_output
 
         return wrapper_log_function_call
 
@@ -95,6 +107,15 @@ def log_function_or_method_call(
 
 
 class CodeSectionTimer:
+    """Logs runtime between 2 checkpoints (i.e. times a code section)
+
+    Example:
+        >>> logger: logging.Logger = create_default_logger(__name__)
+        >>> code_section_timer = CodeSectionTimer()
+        >>> code_section_timer.section("load data").start()
+        >>> code_section_timer.section("load_data").end()
+    """
+
     def __init__(self) -> None:
         self.logger: Optional[logging.Logger] = None
         self.sections: dict[str, dict] = {}
@@ -104,12 +125,14 @@ class CodeSectionTimer:
         self.logger = logger
 
     def section(self, section_name: str) -> Self:
+        """Selects an existing named section (or creates it if it doesn't exist)"""
         if section_name not in self.sections:
             self.sections[section_name] = {"start_time": None, "end_time": None}
         self.current_section = section_name
         return self
 
     def start(self) -> None:
+        """Starts the timer for the currently selected section"""
         if self.sections[self.current_section]["start_time"] is not None:
             raise AlreadyExistsError(
                 f"section '{self.current_section}' has already started"
@@ -118,6 +141,7 @@ class CodeSectionTimer:
         self.logger.info("Started section '%s'", self.current_section)
 
     def end(self) -> None:
+        """Stops the running timer of the currently selected section"""
         if self.sections[self.current_section]["end_time"] is not None:
             raise AlreadyExistsError(
                 f"section '{self.current_section}' has already finished"
