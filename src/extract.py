@@ -19,6 +19,15 @@ change_logger_format(
 )
 
 
+def get_standard_period_dates() -> tuple[datetime.datetime, datetime.datetime]:
+    """TODO"""
+    period_start_incl: datetime.datetime = (
+        datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(days=1)
+    ).replace(hour=0, minute=0, second=0, microsecond=0)
+    period_end_excl: datetime.datetime = period_start_incl + datetime.timedelta(days=1)
+    return period_start_incl, period_end_excl
+
+
 @log_function_or_method_call(logger, log_outputs=True)
 def extract_from_pos_system(
     start_datetime: datetime.datetime, end_datetime: datetime.datetime
@@ -46,7 +55,7 @@ def extract_web_events_data(
     return {"status": "SUCCESS", "nrows": 867_111}
 
 
-@log_function_or_method_call(logger, log_inputs=True, log_outputs=True)
+@log_function_or_method_call(logger, log_inputs=True)
 def extract_data(
     source_name: str, start_datetime: datetime.datetime, end_datetime: datetime.datetime
 ):

@@ -100,7 +100,9 @@ def log_function_or_method_call(
             logger.info(log_message)
             func_output = func(*args, **kwargs)
             if log_outputs:
-                log_message += f"\nFunction/method output:\n{dynamic_str_truncate(func_output, log_outputs_max_nchar)}"
+                logger.info(
+                    f"Output of {func.__name__}(): {dynamic_str_truncate(func_output, log_outputs_max_nchar)}"
+                )
             return func_output
 
         return wrapper_log_function_call
