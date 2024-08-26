@@ -5,9 +5,18 @@ import logging
 import random
 import time
 
-from src.log import create_default_logger, log_function_or_method_call
+from src.log import (
+    BASE_LOGGER_FORMAT,
+    change_logger_format,
+    create_default_logger,
+    log_function_or_method_call,
+)
 
 logger: logging.Logger = create_default_logger(__name__)
+change_logger_format(
+    logger,
+    BASE_LOGGER_FORMAT.replace("%(message)s", "[extract] %(message)s"),
+)
 
 
 @log_function_or_method_call(logger, log_outputs=True)

@@ -22,10 +22,10 @@ try:
     ).replace(hour=0, minute=0, second=0, microsecond=0)
     period_end_excl: datetime.datetime = period_start_incl + datetime.timedelta(days=1)
 
-    code_section_timer.section("Extraction").start()
+    code_section_timer.section("Extract").start()
     for data_source_name in ("pos_system", "mobile_events", "web_events"):
         extract_data(data_source_name, period_start_incl, period_end_excl)
-    code_section_timer.section("Extraction").end()
+    code_section_timer.section("Extract").end()
 
     code_section_timer.section("Daily ELT process").end()
 
