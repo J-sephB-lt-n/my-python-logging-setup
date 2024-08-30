@@ -28,7 +28,7 @@ def get_standard_period_dates() -> tuple[datetime.datetime, datetime.datetime]:
     return period_start_incl, period_end_excl
 
 
-@log_function_or_method_call(logger, log_outputs=True)
+@log_function_or_method_call(logger, log_outputs=True, log_runtime_metrics=True)
 def extract_from_pos_system(
     start_datetime: datetime.datetime, end_datetime: datetime.datetime
 ):
@@ -37,7 +37,7 @@ def extract_from_pos_system(
     return {"status": "SUCCESS", "nrows": 6_239}
 
 
-@log_function_or_method_call(logger, log_outputs=True)
+@log_function_or_method_call(logger, log_outputs=True, log_runtime_metrics=True)
 def extract_mobile_events_data(
     start_datetime: datetime.datetime, end_datetime: datetime.datetime
 ):
@@ -46,7 +46,7 @@ def extract_mobile_events_data(
     return {"status": "FAILURE", "nrows": None}
 
 
-@log_function_or_method_call(logger, log_outputs=True)
+@log_function_or_method_call(logger, log_outputs=True, log_runtime_metrics=True)
 def extract_web_events_data(
     start_datetime: datetime.datetime, end_datetime: datetime.datetime
 ):
