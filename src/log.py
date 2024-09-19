@@ -4,7 +4,10 @@ import functools
 import json
 import logging
 import time
+from types import SimpleNamespace
 from typing import Any, Callable, Final, Optional, Self
+
+import google.cloud.logging
 
 from src.custom_exceptions import AlreadyExistsError
 
@@ -12,16 +15,30 @@ BASE_LOGGER_FORMAT: Final[str] = (
     "%(asctime)s : %(name)s : %(levelname)s : [daily ELT] %(message)s"
 )
 
+gcp_logging_client = google.cloud.logging.Client()
 
-def create_default_logger(logger_name: str) -> logging.Logger:
+log_handlers = SimpleNamespace(
+    gcp=google.cloud.logging.handlers.CloudLoggingHandler(
+        gcp_logging_client  # writes to GCP Cloud Logging
+    ),
+    stream=logging.StreamHandler(),  # writes to standard out
+    file=logging.FileHandler("main.log"),  # writes to local file
+)
+for handler in log_handlers.__dict__.values():
+    handler.setFormatter(logging.Formatter(BASE_LOGGER_FORMAT))
+
+
+def create_default_logger(
+    logger_name: str,
+    handlers: list[logging.Handler] = [log_handlers.stream],
+) -> logging.Logger:
     """Creates a new logger with default settings"""
     logger = logging.getLogger(logger_name)
     if logger.handlers:
         raise AlreadyExistsError(f"logger {logger_name} already exists")
     logger.setLevel(logging.INFO)
-    handler = logging.StreamHandler()
-    handler.setFormatter(logging.Formatter(BASE_LOGGER_FORMAT))
-    logger.addHandler(handler)
+    for handler in handlers:
+        logger.addHandler(handler)
     return logger
 
 

@@ -18,17 +18,41 @@ Goals:
 | ❌        | class decorator (logs instantiations and method calls)                        | Haven't started this yet                                 |
 | ✅        | section timer                                                                 |
 | ❌        | flask/fastAPI route call logging                                              | Haven't started this yet                                 |
+| ✅        | integration with Google Cloud logging                                         |                                                          |
 
 Here are examples of the basic functionality available so far:
 
 ```python
-from src.log import BASE_LOGGER_FORMAT, create_default_logger, code_section_timer, log_function_or_method_call, change_logger_format
+import sys
+from src.log import (
+  BASE_LOGGER_FORMAT,
+  create_default_logger,
+  log_handlers,
+  code_section_timer,
+  log_function_or_method_call,
+  change_logger_format,
+)
 
 logger = create_default_logger(__name__)
+
+# automatically log all errors raised outside of a try/except except block
+sys.excepthook = lambda err_type, err_value, err_traceback: logger.error(
+    "Uncaught exception", exc_info=(err_type, err_value, err_traceback)
+)
 
 # basic log messages #
 logger.info("an example log message")
 # 2024-09-01 20:33:56,769 : __main__ : INFO : [daily ELT] an example log message
+
+verbose_logger = create_default_logger(
+  logger_name=f"verbose-{__name__}",
+  handlers=[
+    log_handlers.file,
+    log_handlers.gcp,
+    log_handlers.stream,
+  ],
+)
+verbose_logger.info("this log message writes to local file `main.log`, to standard out, and to GCP cloud logging")
 
 # code section timer #
 import time

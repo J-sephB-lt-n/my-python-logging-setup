@@ -1,6 +1,7 @@
 """The entrypoint script for the daily ELT process"""
 
 import logging
+import sys
 
 from src.extract import extract_data, get_standard_period_dates
 from src.log import (
@@ -9,6 +10,10 @@ from src.log import (
 )
 
 logger = create_default_logger(__name__)
+# automatically log all errors raised outside of a try/except except block
+sys.excepthook = lambda err_type, err_value, err_traceback: logger.error(
+    "Uncaught exception", exc_info=(err_type, err_value, err_traceback)
+)
 code_section_timer.set_logger(logger)
 
 try:
